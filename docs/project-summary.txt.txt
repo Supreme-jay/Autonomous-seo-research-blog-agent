@@ -1,0 +1,25 @@
+Project Title:
+Autonomous SEO Research & Blog Writing Agent
+
+Overview:
+This is a company-style SEO content operations system built with n8n, Google Sheets, SerpAPI, and AI models. It automates topic intake, keyword research, competitor analysis, SEO metadata generation, blog drafting, review approval tracking, and publish workflow updates.
+
+Problem Solved:
+Content teams often spend too much time researching keywords, checking competitors, drafting blog posts, and manually updating spreadsheet-based pipelines. This workflow automates those steps and keeps the process structured.
+
+Main Features:
+- Topic intake from Google Sheets
+- Main query generation
+- Keyword research generation
+- Competitor article research
+- SEO title and meta description generation
+- Blog draft generation
+- Detailed output storage
+- Review approval flow
+- Publish completion flow
+
+Status Flow:
+Pending → Researching → Draft Generated → Review Needed → Approved → Published
+
+My Role:
+I designed the spreadsheet system, workflow logic, status management, validation paths, review workflow, publish workflow, and final content pipeline structure.

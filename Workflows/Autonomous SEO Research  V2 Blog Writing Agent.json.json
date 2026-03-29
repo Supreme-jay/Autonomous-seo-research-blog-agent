@@ -1,0 +1,1720 @@
+{
+  "name": "Autonomous SEO Research  V2 Blog Writing Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -1248,
+        256
+      ],
+      "id": "a12171ea-3d85-41eb-bae7-bbca548e8d82",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1cukQAd6epeWzeFr8m0oHLCh4-xZjYi6gtT1D7KbzhBs",
+          "mode": "list",
+          "cachedResultName": "Content Pipeline",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1cukQAd6epeWzeFr8m0oHLCh4-xZjYi6gtT1D7KbzhBs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1cukQAd6epeWzeFr8m0oHLCh4-xZjYi6gtT1D7KbzhBs/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Status",
+              "lookupValue": "Pending"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -928,
+        112
+      ],
+      "id": "e4ea69a2-c838-40f9-8426-469bcc91adc5",
+      "name": "Get Pending Content Idea",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Ire4zy1yFjUcqeWG",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "1104d47e-a0f6-48e0-b862-09a6821fad25",
+              "leftValue": "={{ $json.Status }}",
+              "rightValue": "Pending",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -672,
+        32
+      ],
+      "id": "5734b3c0-7deb-4c08-923c-83e6a5dba565",
+      "name": "IF. Check Pending Status"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an SEO keyword research assistant.\n\nFor this topic:\n{{$json[\"Idea\"]}}\n\nReturn ONLY valid JSON in this exact structure:\n{\n  \"main_query\": \"string\",\n  \"keywords\": \"keyword1, keyword2, keyword3, keyword4, keyword5, keyword6, keyword7, keyword8, keyword9, keyword10\"\n}\n\nRules:\n- main_query must be the single best Google search query for the topic.\n- keywords must contain exactly 10 SEO keywords separated by commas.\n- output strict JSON only.\n- no markdown.\n- no explanations.",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -416,
+        -64
+      ],
+      "id": "94191f63-0b7d-4770-9b77-bcdfd590f7a5",
+      "name": "Generate Keyword Research [LLM Chain.]"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const raw = $json.text || $json.output || $json.response || '';\n\nlet cleaned = raw.trim();\ncleaned = cleaned\n  .replace(/^```json\\s*/i, '')\n  .replace(/^```\\s*/i, '')\n  .replace(/\\s*```$/i, '');\n\nlet parsed;\n\ntry {\n  parsed = JSON.parse(cleaned);\n} catch (error) {\n  return {\n    json: {\n      Idea: $('Get Pending Content Idea').item.json.Idea,\n      \"Main Query\": '',\n      Keywords: '',\n      Status: 'Failed',\n      \"Error Log\": `Keyword JSON parse failed: ${cleaned}`\n    }\n  };\n}\n\nreturn {\n  json: {\n    Idea: $('Get Pending Content Idea').item.json.Idea,\n    \"Main Query\": parsed.main_query || '',\n    Keywords: parsed.keywords || '',\n    Status: 'Researching',\n    \"Error Log\": ''\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        16,
+        -144
+      ],
+      "id": "ac6158ac-5968-4f38-9bd2-27cb7bb94640",
+      "name": "Parse Keyword JSON (Code in JavaScript)"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1cukQAd6epeWzeFr8m0oHLCh4-xZjYi6gtT1D7KbzhBs",
+          "mode": "list",
+          "cachedResultName": "Content Pipeline",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1cukQAd6epeWzeFr8m0oHLCh4-xZjYi6gtT1D7KbzhBs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-iGkGlbs4YWIv3zMJJ0dAHMwhIZ5ZlUneRoTvfRo47E/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Idea": "={{$json[\"Idea\"]}}",
+            "Competitors": "=",
+            "Status": "={{$json[\"Status\"]}}",
+            "row_number": "={{ $('Get Pending Content Idea').item.json.row_number }}",
+            "Main Query": "={{$json[\"Main Query\"]}}",
+            "Keyword": "={{$json[\"Keywords\"]}}"
+          },
+          "matchingColumns": [
+            "Idea"
+          ],
+          "schema": [
+            {
+              "id": "Idea",
+              "displayName": "Idea",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Main Query",
+              "displayName": "Main Query",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Keyword",
+              "displayName": "Keyword",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Competitors",
+              "displayName": "Competitors",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "SEO Title",
+              "displayName": "SEO Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Meta Description",
+              "displayName": "Meta Description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Reviewer",
+              "displayName": "Reviewer",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Due Date",
+              "displayName": "Due Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Last Updated",
+              "displayName": "Last Updated",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        320,
+        -144
+      ],
+      "id": "f5caa012-528c-4df2-bf76-d8b36edf31cb",
+      "name": "Save Keyword Research (Update Sheet)",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Ire4zy1yFjUcqeWG",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://serpapi.com/search.json",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "={{ $('Save Keyword Research (Update Sheet)').item.json[\"Main Query\"] || $('Save Keyword Research (Update Sheet)').item.json.Idea }}"
+            },
+            {
+              "name": "engine",
+              "value": "google"
+            },
+            {
+              "name": "api_key",
+              "value": "f8c5c829dc5b7194efa8db93a68619795fb910e9773a665622b868d2a1f34dc4"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        16,
+        80
+      ],
+      "id": "ae64c161-2040-4362-86c4-d8d8b976f3b0",
+      "name": "Search Competitor Articles (HTTP Request1)"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const results = $json.organic_results || [];\nconst topResults = results.slice(0, 3);\n\nconst competitors = topResults.map(r => r.link).join(\", \");\n\nconst competitorNotes = topResults.map((r, index) => {\n  const title = r.title || '';\n  const snippet = r.snippet || '';\n  const link = r.link || '';\n  return `${index + 1}. ${title} | ${snippet} | ${link}`;\n}).join(\"\\n\\n\");\n\nreturn {\n  json: {\n    Idea: $('Save Keyword Research (Update Sheet)').item.json.Idea,\n    \"Main Query\": $('Save Keyword Research (Update Sheet)').item.json[\"Main Query\"],\n    Keywords: $('Save Keyword Research (Update Sheet)').item.json.Keywords,\n    Competitors: competitors,\n    \"Competitors Notes\": competitorNotes,\n    Status: 'Draft Generated',\n    \"Error Log\": ''\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        304,
+        128
+      ],
+      "id": "91a0192a-e960-4c2c-ac56-85aab3b8eaec",
+      "name": "Parse Competitor Result (Code in JavaScript1)"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1cukQAd6epeWzeFr8m0oHLCh4-xZjYi6gtT1D7KbzhBs",
+          "mode": "list",
+          "cachedResultName": "Content Pipeline",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1cukQAd6epeWzeFr8m0oHLCh4-xZjYi6gtT1D7KbzhBs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-iGkGlbs4YWIv3zMJJ0dAHMwhIZ5ZlUneRoTvfRo47E/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Idea": "={{$json[\"Idea\"]}}",
+            "Main Query": "={{$json[\"Main Query\"]}}",
+            "Competitors": "={{$json[\"Competitors\"]}}",
+            "Status": "={{$json[\"Status\"]}}",
+            "Keyword": "={{ $('Save Keyword Research (Update Sheet)').item.json.Keyword }}"
+          },
+          "matchingColumns": [
+            "Idea"
+          ],
+          "schema": [
+            {
+              "id": "Idea",
+              "displayName": "Idea",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Main Query",
+              "displayName": "Main Query",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Keyword",
+              "displayName": "Keyword",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Competitors",
+              "displayName": "Competitors",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "SEO Title",
+              "displayName": "SEO Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Meta Description",
+              "displayName": "Meta Description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Reviewer",
+              "displayName": "Reviewer",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Due Date",
+              "displayName": "Due Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Last Updated",
+              "displayName": "Last Updated",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -784,
+        528
+      ],
+      "id": "5f4ed398-314e-4b05-90c6-3c9701b736b1",
+      "name": "Save Competitor Research (Update row in sheet20",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Ire4zy1yFjUcqeWG",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an expert SEO content writer.\n\nUsing the data below, create SEO metadata.\n\nTopic:\n{{$json[\"Idea\"]}}\n\nMain Query:\n{{$json[\"Main Query\"]}}\n\nKeywords:\n{{ $json.Keyword }}\n\nCompetitor URLs:\n{{$json[\"Competitors\"]}}\n\nCompetitor Notes:\n{{ $('Parse Competitor Result (Code in JavaScript1)').item.json['Competitors Notes'] }}\n\nReturn ONLY valid JSON in this exact structure:\n{\n  \"seo_title\": \"string\",\n  \"meta_description\": \"string\"\n}\n\nRules:\n- seo_title must be compelling and SEO-friendly.\n- meta_description must be around 150 to 160 characters.\n- output strict JSON only.\n- no markdown.\n- no explanations.\n- do not wrap the response in code fences.",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -224,
+        368
+      ],
+      "id": "847ebee1-0b22-4f46-baba-d5a84778e142",
+      "name": "Generate SEO Metadata (Basic LLM Chain)"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const raw = $json.text || $json.output || $json.response || '';\n\nlet cleaned = raw.trim();\ncleaned = cleaned\n  .replace(/^```json\\s*/i, '')\n  .replace(/^```\\s*/i, '')\n  .replace(/\\s*```$/i, '');\n\nlet parsed;\n\ntry {\n  parsed = JSON.parse(cleaned);\n} catch (error) {\n  return {\n    json: {\n      \"SEO Title\": '',\n      \"Meta Description\": '',\n      Status: 'Failed',\n      \"Error Log\": `Metadata JSON parse failed: ${cleaned}`\n    }\n  };\n}\n\nreturn {\n  json: {\n    \"SEO Title\": parsed.seo_title || '',\n    \"Meta Description\": parsed.meta_description || '',\n    Status: 'Draft Generated',\n    \"Error Log\": ''\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        352
+      ],
+      "id": "62ab61a1-a33a-4b58-a229-7b8717ca0355",
+      "name": "Parse Metadata JSON (Code in JavaScript)"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        480,
+        496
+      ],
+      "id": "6bfdf3c2-87b8-482c-9654-5bb680765889",
+      "name": "Merge Research + Metadata"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        656,
+        832
+      ],
+      "id": "d5e17b29-5da0-4b13-a7e2-30bbd012fb96",
+      "name": "Merge all final data"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1C24T0fK3EoUtemCTQumqT5NqyNygEhgGaWMKma8yFHQ",
+          "mode": "list",
+          "cachedResultName": "Detailed Output",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1C24T0fK3EoUtemCTQumqT5NqyNygEhgGaWMKma8yFHQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1C24T0fK3EoUtemCTQumqT5NqyNygEhgGaWMKma8yFHQ/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Idea": "={{$json[\"Idea\"]}}",
+            "Competitors Notes": "={{$json[\"Competitors Notes\"]}}",
+            "Error Log": "={{$json[\"Error Log\"]}}"
+          },
+          "matchingColumns": [
+            "Idea"
+          ],
+          "schema": [
+            {
+              "id": "Idea",
+              "displayName": "Idea",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Competitors Notes",
+              "displayName": "Competitors Notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Blog Post",
+              "displayName": "Blog Post",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Error Log",
+              "displayName": "Error Log",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Word Count",
+              "displayName": "Word Count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        624,
+        80
+      ],
+      "id": "10cbb0ab-d24c-4c20-82d7-d13c10a57ce9",
+      "name": "Save Competitors Notes",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Ire4zy1yFjUcqeWG",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1C24T0fK3EoUtemCTQumqT5NqyNygEhgGaWMKma8yFHQ",
+          "mode": "list",
+          "cachedResultName": "Detailed Output",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1C24T0fK3EoUtemCTQumqT5NqyNygEhgGaWMKma8yFHQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1C24T0fK3EoUtemCTQumqT5NqyNygEhgGaWMKma8yFHQ/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Idea": "={{$json[\"Idea\"]}}",
+            "Competitors Notes": "={{ $('Parse Competitor Result (Code in JavaScript1)').item.json['Competitors Notes'] }}",
+            "Blog Post": "={{$json[\"text\"] || $json[\"output\"] || $json[\"response\"]}}",
+            "Error Log": "={{$json[\"Error Log\"] || \"\"}}",
+            "Word Count": "={{ ($json[\"text\"] || $json[\"output\"] || $json[\"response\"] || \"\").split(/\\s+/).filter(Boolean).length }}"
+          },
+          "matchingColumns": [
+            "Idea"
+          ],
+          "schema": [
+            {
+              "id": "Idea",
+              "displayName": "Idea",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Competitors Notes",
+              "displayName": "Competitors Notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Blog Post",
+              "displayName": "Blog Post",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Error Log",
+              "displayName": "Error Log",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Word Count",
+              "displayName": "Word Count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1184,
+        224
+      ],
+      "id": "b7159cd3-0e9d-4733-8f3f-235cc9d01020",
+      "name": "Save Detailed Draft",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Ire4zy1yFjUcqeWG",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an expert SEO content writer.\n\nWrite a 1200 to 1500 word SEO blog post.\n\nTopic:\n{{$json[\"Idea\"]}}\n\nMain Query:\n{{$json[\"Main Query\"]}}\n\nKeywords:\n{{ $json.Keyword }}\n\nCompetitor URLs:\n{{$json[\"Competitors\"]}}\n\nCompetitor Notes:\n{{ $('Parse Competitor Result (Code in JavaScript1)').item.json['Competitors Notes'] }}\n\nRequirements:\n- sound human, practical, and professional\n- include headings and subheadings\n- naturally include the keywords\n- do not copy competitors\n- output plain text only\n- use normal headings and paragraphs\n- do not use HTML tags\n- do not output JSON\n- do not use markdown code fences",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -16,
+        672
+      ],
+      "id": "31181049-5215-4684-a63c-033192752827",
+      "name": "Generator Blog Post (Basic LLM Chain1)"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "6c9c2911-f9a9-48e4-92aa-c64d103a8e2f",
+              "leftValue": "{{$json[\"SEO Title\"]}}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "9e9759cb-3c1a-4ff7-9157-2649aa05b5ef",
+              "leftValue": "={{$json[\"SEO Title\"]}}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "b2a18c09-2aa9-461c-bad5-10f8145bc4c1",
+              "leftValue": "={{$json[\"text\"] || $json[\"output\"] || $json[\"response\"]}}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        832,
+        480
+      ],
+      "id": "491fa659-8402-44d5-9484-90dad83a4d44",
+      "name": "Validate Draft Output"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1cukQAd6epeWzeFr8m0oHLCh4-xZjYi6gtT1D7KbzhBs",
+          "mode": "list",
+          "cachedResultName": "Content Pipeline",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1cukQAd6epeWzeFr8m0oHLCh4-xZjYi6gtT1D7KbzhBs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1cukQAd6epeWzeFr8m0oHLCh4-xZjYi6gtT1D7KbzhBs/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Idea": "={{$json[\"Idea\"]}}",
+            "Last Updated": "={{$now}}",
+            "Status": "Failed"
+          },
+          "matchingColumns": [
+            "Idea"
+          ],
+          "schema": [
+            {
+              "id": "Idea",
+              "displayName": "Idea",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Main Query",
+              "displayName": "Main Query",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Keywords",
+              "displayName": "Keywords",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Competitors",
+              "displayName": "Competitors",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "SEO Title",
+              "displayName": "SEO Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Meta Description",
+              "displayName": "Meta Description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Reviewer",
+              "displayName": "Reviewer",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Due Date",
+              "displayName": "Due Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Last Updated",
+              "displayName": "Last Updated",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1008,
+        1328
+      ],
+      "id": "1e2f9f03-3803-4e70-af5e-5d7309e2ada5",
+      "name": "Save Failed Pipeline Status",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Ire4zy1yFjUcqeWG",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1C24T0fK3EoUtemCTQumqT5NqyNygEhgGaWMKma8yFHQ",
+          "mode": "list",
+          "cachedResultName": "Detailed Output",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1C24T0fK3EoUtemCTQumqT5NqyNygEhgGaWMKma8yFHQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1C24T0fK3EoUtemCTQumqT5NqyNygEhgGaWMKma8yFHQ/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Idea": "={{$json[\"Idea\"]}}",
+            "Error Log": "=Draft validation failed: missing one or more required fields"
+          },
+          "matchingColumns": [
+            "Idea"
+          ],
+          "schema": [
+            {
+              "id": "Idea",
+              "displayName": "Idea",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Competitors Notes",
+              "displayName": "Competitors Notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Blog Post",
+              "displayName": "Blog Post",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Error Log",
+              "displayName": "Error Log",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Word Count",
+              "displayName": "Word Count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1152,
+        1056
+      ],
+      "id": "0a94a6a3-fa05-4cb3-aed1-6610813b89a1",
+      "name": "Save Failed Detailed Output",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Ire4zy1yFjUcqeWG",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1cukQAd6epeWzeFr8m0oHLCh4-xZjYi6gtT1D7KbzhBs",
+          "mode": "list",
+          "cachedResultName": "Content Pipeline",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1cukQAd6epeWzeFr8m0oHLCh4-xZjYi6gtT1D7KbzhBs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1cukQAd6epeWzeFr8m0oHLCh4-xZjYi6gtT1D7KbzhBs/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Idea": "={{$json[\"Idea\"]}}",
+            "Main Query": "={{$json[\"Main Query\"]}}",
+            "Keywords": "={{$json[\"Keywords\"]}}",
+            "Competitors": "={{$json[\"Competitors\"]}}",
+            "SEO Title": "={{$json[\"SEO Title\"]}}",
+            "Meta Description": "={{$json[\"Meta Description\"]}}",
+            "Status": "Review Needed",
+            "Last Updated": "={{$now}}"
+          },
+          "matchingColumns": [
+            "Idea"
+          ],
+          "schema": [
+            {
+              "id": "Idea",
+              "displayName": "Idea",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Main Query",
+              "displayName": "Main Query",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Keywords",
+              "displayName": "Keywords",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Competitors",
+              "displayName": "Competitors",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "SEO Title",
+              "displayName": "SEO Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Meta Description",
+              "displayName": "Meta Description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Reviewer",
+              "displayName": "Reviewer",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Due Date",
+              "displayName": "Due Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Last Updated",
+              "displayName": "Last Updated",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1328,
+        432
+      ],
+      "id": "c04b007d-7ce3-4577-8910-373db0089075",
+      "name": "Save Pipeline Draft",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Ire4zy1yFjUcqeWG",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1L5oYBhsUR1_1H9brWf2LpekmsBELU3jzLPpfQFC4jY0",
+          "mode": "list",
+          "cachedResultName": "Publishing Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1L5oYBhsUR1_1H9brWf2LpekmsBELU3jzLPpfQFC4jY0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-iGkGlbs4YWIv3zMJJ0dAHMwhIZ5ZlUneRoTvfRo47E/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Idea": "={{$json[\"Idea\"]}}",
+            "Review Status": "Approved",
+            "Channel": "Blog",
+            "Approved By": "Content Manager"
+          },
+          "matchingColumns": [
+            "Idea"
+          ],
+          "schema": [
+            {
+              "id": "Idea",
+              "displayName": "Idea",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Review Status",
+              "displayName": "Review Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Approved By",
+              "displayName": "Approved By",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Approved Date",
+              "displayName": "Approved Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Published URL ",
+              "displayName": "Published URL ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Published Date",
+              "displayName": "Published Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Channel",
+              "displayName": "Channel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1072,
+        -16
+      ],
+      "id": "e2aaf037-4d95-4ae3-9641-00ab52a1351b",
+      "name": "Save Publishing Seed",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Ire4zy1yFjUcqeWG",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -560,
+        -288
+      ],
+      "id": "189aec95-c632-410b-a53d-c61952a96938",
+      "name": "Wait",
+      "webhookId": "b9d4b25a-34a9-4b0d-9583-2a1bde81cb79"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -496,
+        144
+      ],
+      "id": "55ac7a0b-b94a-4c9b-85cb-80118df7a8a2",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "IPi5IK495RyaKFb3",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -496,
+        864
+      ],
+      "id": "59f434b6-39ea-4275-814f-b43c5f0fc309",
+      "name": "Groq Chat Model1",
+      "credentials": {
+        "groqApi": {
+          "id": "IPi5IK495RyaKFb3",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -96,
+        880
+      ],
+      "id": "10a97554-16cc-494a-988a-3422ebd23d82",
+      "name": "Groq Chat Model2",
+      "credentials": {
+        "groqApi": {
+          "id": "IPi5IK495RyaKFb3",
+          "name": "Groq account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Pending Content Idea",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Pending Content Idea": {
+      "main": [
+        [
+          {
+            "node": "IF. Check Pending Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF. Check Pending Status": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Keyword Research [LLM Chain.]": {
+      "main": [
+        [
+          {
+            "node": "Parse Keyword JSON (Code in JavaScript)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Keyword JSON (Code in JavaScript)": {
+      "main": [
+        [
+          {
+            "node": "Save Keyword Research (Update Sheet)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Keyword Research (Update Sheet)": {
+      "main": [
+        [
+          {
+            "node": "Search Competitor Articles (HTTP Request1)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Competitor Articles (HTTP Request1)": {
+      "main": [
+        [
+          {
+            "node": "Parse Competitor Result (Code in JavaScript1)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Competitor Result (Code in JavaScript1)": {
+      "main": [
+        [
+          {
+            "node": "Save Competitor Research (Update row in sheet20",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Save Competitors Notes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Competitor Research (Update row in sheet20": {
+      "main": [
+        [
+          {
+            "node": "Merge Research + Metadata",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Generate SEO Metadata (Basic LLM Chain)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Generator Blog Post (Basic LLM Chain1)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate SEO Metadata (Basic LLM Chain)": {
+      "main": [
+        [
+          {
+            "node": "Parse Metadata JSON (Code in JavaScript)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Metadata JSON (Code in JavaScript)": {
+      "main": [
+        [
+          {
+            "node": "Merge Research + Metadata",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Research + Metadata": {
+      "main": [
+        [
+          {
+            "node": "Merge all final data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge all final data": {
+      "main": [
+        [
+          {
+            "node": "Validate Draft Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generator Blog Post (Basic LLM Chain1)": {
+      "main": [
+        [
+          {
+            "node": "Merge all final data",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Validate Draft Output": {
+      "main": [
+        [
+          {
+            "node": "Save Detailed Draft",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Save Publishing Seed",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Save Pipeline Draft",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Save Failed Pipeline Status",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Save Failed Detailed Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Publishing Seed": {
+      "main": [
+        []
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Generate Keyword Research [LLM Chain.]",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generate Keyword Research [LLM Chain.]",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generate SEO Metadata (Basic LLM Chain)",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generator Blog Post (Basic LLM Chain1)",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "31ac4496-14fc-42bc-bf28-a1bf7ff8e37d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d361637f1d70339ec01cb1a27fd403eac27fb61b561b025cd2a653356b47936c"
+  },
+  "id": "yyXJto4NmiYlL2Gm2UKNR",
+  "tags": []
+}
