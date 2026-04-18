@@ -31,3 +31,5 @@ AI-powered SEO content automation system built with n8n, Google Sheets, SerpAPI,
 
 ## Business Value
 This system helps content teams automate SEO research, content drafting, review handling, and publishing workflow tracking.
+
+Built by Ifeanyi Nwadike
